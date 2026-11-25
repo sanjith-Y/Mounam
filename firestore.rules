@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to verify user identity
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+    
+    // User profile: only the user themselves can read/write their base settings
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // User's custom communication vocabulary
+      match /vocabulary/{vocabId} {
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId);
+      }
+      
+      // User's favorites
+      match /favorites/{favId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Emergency contacts (private to owner)
+      match /emergency_contacts/{contactId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Accessibility & UI settings
+      match /accessibility_settings/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Communication preferences
+      match /communication_preferences/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // Caregiver Linking collection with mutual authorization
+    match /caregiver_links/{linkId} {
+      // Both the user and the linked caregiver can view the link state
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || request.auth.uid == resource.data.caregiverId);
+      
+      // Only the user can create, update permissions, or revoke the link
+      allow write: if request.auth != null && 
+        (request.auth.uid == request.resource.data.userId || request.auth.uid == resource.data.userId);
+    }
+    
+    // Global standard phrases (Read-only for all users)
+    match /public_phrases/{phraseId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Public verified sign library
+    match /verified_signs/{signId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

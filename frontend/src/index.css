@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Custom Accessibility & Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Accessible Simple Mode */
+.simple-accessible-mode button {
+  min-height: 52px;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+.simple-accessible-mode input,
+.simple-accessible-mode select,
+.simple-accessible-mode textarea {
+  font-size: 1.25rem !important;
+  border-width: 2px !important;
+  border-color: #475569 !important;
+}
+
+.simple-accessible-mode *:focus-visible {
+  outline: 4px solid #7e22ce !important;
+  outline-offset: 3px !important;
+}
+
+/* Subtle pulse animation */
+@keyframes pulseSlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 4s ease-in-out infinite;
+}
