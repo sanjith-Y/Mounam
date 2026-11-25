@@ -7,6 +7,9 @@ import { AlertCircle, WifiOff } from 'lucide-react';
 export const RootLayout: React.FC = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const location = useLocation();
+  const isAppWorkspace =
+    location.pathname.startsWith('/dashboard') ||
+    location.pathname.startsWith('/communication');
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -36,26 +39,28 @@ export const RootLayout: React.FC = () => {
         </div>
       )}
 
-      {/* Main Global Navigation */}
-      <Navbar />
+      {/* Main Global Navigation (public pages only — Dashboard has its own unified nav) */}
+      {!isAppWorkspace && <Navbar />}
 
       {/* Primary Page Content */}
       <main className="flex-1">
         <Outlet />
       </main>
 
-      {/* Floating Emergency SOS Action (Accessible everywhere) */}
-      <Link
-        to="/dashboard?mode=emergency"
-        className="fixed bottom-6 right-6 z-40 bg-red-600 hover:bg-red-700 text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2.5 group focus:outline-none focus:ring-4 focus:ring-red-400"
-        title="Instant Emergency Speech Mode"
-      >
-        <AlertCircle className="w-6 h-6 animate-pulse" />
-        <span className="hidden sm:inline font-bold text-sm tracking-wide">EMERGENCY SOS</span>
-      </Link>
+      {/* Floating Emergency SOS Action (Public pages only; Dashboard has SOS in sidebar & bottom bar) */}
+      {!isAppWorkspace && (
+        <Link
+          to="/dashboard?mode=emergency"
+          className="fixed bottom-6 right-6 z-40 bg-red-600 hover:bg-red-700 text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2.5 group focus:outline-none focus:ring-4 focus:ring-red-400"
+          title="Instant Emergency Speech Mode"
+        >
+          <AlertCircle className="w-6 h-6 animate-pulse" />
+          <span className="hidden sm:inline font-bold text-sm tracking-wide">EMERGENCY SOS</span>
+        </Link>
+      )}
 
-      {/* Global Footer */}
-      <Footer />
+      {/* Global Footer (Public pages only) */}
+      {!isAppWorkspace && <Footer />}
     </div>
   );
 };

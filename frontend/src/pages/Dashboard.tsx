@@ -442,14 +442,13 @@ export const Dashboard: React.FC = () => {
       
       {/* 1. LEFT SIDEBAR */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-72 bg-white border-r border-slate-200/90 flex flex-col justify-between transition-transform duration-300 ${
+        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-72 bg-white border-r border-slate-200/90 flex flex-col overflow-hidden transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <div className="flex flex-col h-full justify-between">
-          <div>
-            {/* Sidebar Brand Header */}
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div className="flex flex-col h-full min-h-0">
+          {/* Sidebar Brand Header */}
+          <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
               <button
                 onClick={() => {
                   setActiveTab('dashboard');
@@ -479,8 +478,8 @@ export const Dashboard: React.FC = () => {
               </button>
             </div>
 
-            {/* Navigation links */}
-            <nav className="p-3 space-y-1">
+            {/* Navigation links (scrollable inside sidebar so items never overflow) */}
+            <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
               {sidebarItems.map((item) => (
                 <button
                   key={item.id}
@@ -501,10 +500,9 @@ export const Dashboard: React.FC = () => {
                 </button>
               ))}
             </nav>
-          </div>
 
           {/* Sidebar Footer with Logout & Return Home */}
-          <div className="p-4 border-t border-slate-100 space-y-2">
+          <div className="p-4 border-t border-slate-100 space-y-2 shrink-0 bg-white">
             <button
               onClick={() => navigate('/')}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 rounded-xl hover:bg-slate-100 transition-colors"
