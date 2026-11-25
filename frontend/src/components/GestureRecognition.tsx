@@ -42,7 +42,13 @@ export interface GestureHistoryItem {
   spoken: boolean;
 }
 
-export const GestureRecognition: React.FC = () => {
+interface GestureRecognitionProps {
+  onSendToConversation?: (text: string) => void;
+}
+
+export const GestureRecognition: React.FC<GestureRecognitionProps> = ({
+  onSendToConversation,
+}) => {
   const { settings, preferences } = useAccessibility();
   // Modes: 'gesture' = Phase 7 basic candidate gestures, 'sign_vocab' = Phase 8 Sign Vocabulary Engine
   const [engineMode, setEngineMode] = useState<'gesture' | 'sign_vocab'>('sign_vocab');
@@ -612,12 +618,20 @@ export const GestureRecognition: React.FC = () => {
               <div className="p-4 bg-brand-purple-50/70 border border-brand-purple-200 rounded-2xl space-y-2">
                 <div className="flex items-center justify-between text-xs font-bold text-brand-purple-900">
                   <span>Assembled Signs ({accumulatedTokens.length}):</span>
-                  <button
-                    onClick={() => setAccumulatedTokens([])}
-                    className="text-red-600 hover:underline text-[11px]"
-                  >
-                    Clear
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setAccumulatedTokens((prev) => prev.slice(0, -1))}
+                      className="text-slate-600 hover:underline text-[11px]"
+                    >
+                      Undo
+                    </button>
+                    <button
+                      onClick={() => setAccumulatedTokens([])}
+                      className="text-red-600 hover:underline text-[11px]"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {accumulatedTokens.map((tok, i) => (
@@ -689,6 +703,43 @@ export const GestureRecognition: React.FC = () => {
                   >
                     <Square className="w-3.5 h-3.5 fill-white" />
                     <span>Stop</span>
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirmedMessage.trim()) {
+                      navigator.clipboard?.writeText(confirmedMessage);
+                    }
+                  }}
+                  disabled={!confirmedMessage.trim()}
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors disabled:opacity-40"
+                >
+                  Copy
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setConfirmedMessage('')}
+                  disabled={!confirmedMessage.trim()}
+                  className="px-3 py-2 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 font-bold text-xs rounded-xl transition-colors disabled:opacity-40"
+                >
+                  Clear
+                </button>
+
+                {onSendToConversation && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirmedMessage.trim()) {
+                        onSendToConversation(confirmedMessage.trim());
+                      }
+                    }}
+                    disabled={!confirmedMessage.trim()}
+                    className="px-3.5 py-2 bg-brand-purple-700 hover:bg-brand-purple-800 text-white font-bold text-xs rounded-xl transition-colors disabled:opacity-40"
+                  >
+                    Send to Conversation
                   </button>
                 )}
 

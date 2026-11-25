@@ -111,6 +111,15 @@ Secondary Tagline: *"You Sign. I Speak. We Understand."*
   - Created `frontend/src/services/feedbackService.ts` and `frontend/src/components/PilotFeedbackPanel.tsx` (local-first queue + optional backend sync + JSON export) mounted in `Dashboard.tsx` under **Pilot Feedback**.
   - Created `PILOT_READINESS_REPORT.md` with honest pilot-ready vs production-ready assessment.
 
+- [x] **Phase 15: Unified Two-Way Communication System (Sign ↔ Speech / Text)**
+  - Created `frontend/src/components/TwoWayCommunication.tsx` with 3 clear modes:
+    - **Side A (`SIGN → TEXT / SPEECH`)**: Wraps `GestureRecognition` with explicit camera permission, local MediaPipe hand tracking, word/sentence assembly, undo/copy/clear, and confirmation-required TTS via `VoiceEngine`.
+    - **Side B (`SPEECH / TYPE → SIGN / TEXT`)**: Wraps `VoiceToSignCommunication` with microphone STT (`SpeechToTextEngine`), typed input + "Show Signs", 25 priority ISL phrase quick chips, ISL Gloss sequence bar, sentence always visible alongside sign stage, and sequential sign playback controls (Previous, Play/Pause, Next, Replay, 0.75x/1.0x/1.25x speed).
+    - **Face-to-Face Conversation Mode**: Shared turn-based live transcript connecting Person A (Sign User) and Person B (Hearing User) with desktop side-by-side (`2xl:grid-cols-2`) and mobile tab/turn switching, plus per-turn confirmed speak and replay-in-sign actions.
+  - Upgraded `frontend/src/services/verifiedSignLibraryService.ts` with phrase-first matching (5→2 token sliding window) before word fallback, ISL glosses (`islGlossSequence`), 19 multi-word ISL phrases + 23 ISL words (covering all 25 priority phrases) + 4 ASL entries = 46 entries, and explicit labeling of unsupported words.
+  - Wired `TwoWayCommunication` into `Dashboard.tsx` sidebar (`two_way_communication`) and mobile bottom navigation bar (`2-Way`).
+  - **Honest Scope Note**: No ISL video files are bundled; the sign stage displays ISLRTC-referenced movement descriptions and ISL gloss sequences rather than fabricated sign videos. Side A camera recognition supports 6 static gestures and 8 vocabulary signs via MediaPipe landmarks rather than full continuous ISL grammar.
+
 ---
 
 ## Recent Updates & Execution Log

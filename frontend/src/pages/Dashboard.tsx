@@ -51,6 +51,7 @@ import { SmartQuickCommunication } from '../components/SmartQuickCommunication';
 import { PersonalVocabularyPanel } from '../components/PersonalVocabularyPanel';
 import { PersonalizationPrivacyPanel } from '../components/PersonalizationPrivacyPanel';
 import { PilotFeedbackPanel } from '../components/PilotFeedbackPanel';
+import { TwoWayCommunication } from '../components/TwoWayCommunication';
 import { Communication } from './Communication';
 import { useAuth } from '../context/AuthContext';
 import { useAccessibility } from '../context/AccessibilityContext';
@@ -71,6 +72,7 @@ type TabView =
   | 'vocabulary'
   | 'personalization'
   | 'feedback'
+  | 'two_way_communication'
   | 'settings'
   | 'help';
 
@@ -433,6 +435,7 @@ export const Dashboard: React.FC = () => {
     { id: 'history', label: 'Communication History', icon: <History className="w-5 h-5" /> },
     { id: 'personalization', label: 'Privacy & Personalization', icon: <ShieldCheck className="w-5 h-5" /> },
     { id: 'feedback', label: 'Pilot Feedback', icon: <MessageSquarePlus className="w-5 h-5" /> },
+    { id: 'two_way_communication', label: 'Two-Way Communication', icon: <Mic className="w-5 h-5" /> },
     { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
     { id: 'help', label: 'Help & Support', icon: <HelpCircle className="w-5 h-5" /> },
   ];
@@ -952,6 +955,13 @@ export const Dashboard: React.FC = () => {
           {activeTab === 'feedback' && (
             <div className="space-y-6">
               <PilotFeedbackPanel />
+            </div>
+          )}
+
+          {/* VIEW: TWO-WAY COMMUNICATION (PHASE 15) */}
+          {activeTab === 'two_way_communication' && (
+            <div className="space-y-6">
+              <TwoWayCommunication />
             </div>
           )}
 
@@ -1548,7 +1558,7 @@ export const Dashboard: React.FC = () => {
         {(
           [
             { id: 'dashboard', label: 'Home', icon: <Home className="w-5 h-5" /> },
-            { id: 'phrases', label: 'Phrases', icon: <Compass className="w-5 h-5" /> },
+            { id: 'two_way_communication', label: '2-Way', icon: <MessageSquare className="w-5 h-5" /> },
             { id: 'voicetotext', label: 'Voice', icon: <Mic className="w-5 h-5" /> },
             { id: 'voicetosign', label: 'Sign', icon: <Hand className="w-5 h-5" /> },
             { id: 'emergency', label: 'SOS', icon: <AlertTriangle className="w-5 h-5 text-red-600" /> },

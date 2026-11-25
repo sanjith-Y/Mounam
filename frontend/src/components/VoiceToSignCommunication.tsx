@@ -24,10 +24,19 @@ import { personalizationService } from '../services/personalizationService';
 import {
   verifiedSignLibraryService,
   SentenceToSignResult,
-  SignLanguageType
+  SignLanguageType,
+  PRIORITY_ISL_PHRASES,
 } from '../services/verifiedSignLibraryService';
 
-export const VoiceToSignCommunication: React.FC = () => {
+interface VoiceToSignCommunicationProps {
+  externalText?: string;
+  onSendToConversation?: (text: string) => void;
+}
+
+export const VoiceToSignCommunication: React.FC<VoiceToSignCommunicationProps> = ({
+  externalText,
+  onSendToConversation,
+}) => {
   const { settings, preferences } = useAccessibility();
   // Input mode: 'voice' or 'text'
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
@@ -52,6 +61,13 @@ export const VoiceToSignCommunication: React.FC = () => {
   const availableSigns = signResult.tokens
     .map((t, idx) => ({ ...t, tokenIndex: idx }))
     .filter((t) => t.hasMatch && t.signAsset);
+
+  // Sync externalText when passed from Conversation Mode
+  useEffect(() => {
+    if (externalText !== undefined && externalText.trim()) {
+      setInputText(externalText);
+    }
+  }, [externalText]);
 
   // Update sign matching whenever text or sign language changes
   useEffect(() => {
@@ -148,7 +164,7 @@ export const VoiceToSignCommunication: React.FC = () => {
             </h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Speaking users talk or type $\rightarrow$ Spoken words sequence into verified sign language representations.
+            Hearing person speaks or types → MOUNAM matches validated ISL/ASL phrases &amp; words for the sign-language user.
           </p>
         </div>
 
@@ -226,6 +242,71 @@ export const VoiceToSignCommunication: React.FC = () => {
           placeholder="Speak or type a sentence to see corresponding verified sign representation..."
           className="w-full text-base sm:text-lg font-bold rounded-2xl p-4 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-purple-500 bg-slate-50 text-slate-900 resize-none shadow-xs"
         />
+
+        {/* Quick-action Show Signs / Send to Conversation + Everyday ISL Phrase Chips */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            {PRIORITY_ISL_PHRASES.slice(0, 8).map((phrase) => (
+              <button
+                key={phrase}
+                type="button"
+                onClick={() => {
+                  setInputText(phrase);
+                  setCurrentSignIndex(0);
+                  setIsPlaying(true);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-brand-purple-900 border border-purple-200 text-[11px] font-bold transition-colors"
+              >
+                {phrase}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setCurrentSignIndex(0);
+                setIsPlaying(true);
+              }}
+              disabled={availableSigns.length === 0}
+              icon={<Play className="w-3.5 h-3.5" />}
+            >
+              Show Signs
+            </Button>
+            {onSendToConversation && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => {
+                  if (!inputText.trim()) return;
+                  onSendToConversation(inputText.trim());
+                  setCurrentSignIndex(0);
+                  setIsPlaying(true);
+                }}
+                disabled={!inputText.trim()}
+              >
+                Send &amp; Show Signs
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* ISL Gloss / Grammar Order indicator */}
+        {signResult.islGlossSequence.length > 0 && (
+          <div className="px-3.5 py-2 bg-indigo-50 border border-indigo-200 rounded-xl text-xs flex flex-wrap items-center gap-2">
+            <span className="font-black text-indigo-900 uppercase tracking-wider">
+              {signLanguage} Gloss Order:
+            </span>
+            <span className="font-bold text-indigo-700">
+              {signResult.islGlossSequence.join(' · ')}
+            </span>
+            <span className="text-[11px] text-indigo-600 ml-auto">
+              (Sign grammar differs from English word order)
+            </span>
+          </div>
+        )}
 
         {micError && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2">
@@ -319,6 +400,11 @@ export const VoiceToSignCommunication: React.FC = () => {
                   <h3 className="text-3xl sm:text-4xl font-black capitalize tracking-tight text-white">
                     {activeSignItem.word}
                   </h3>
+                  {activeSignItem.islGloss && (
+                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full bg-white/10 text-[11px] font-bold text-brand-purple-200">
+                      Gloss: {activeSignItem.islGloss}
+                    </span>
+                  )}
                   <p className="text-xs sm:text-sm text-slate-300 max-w-md mt-2 font-medium">
                     {activeSignItem.description}
                   </p>
@@ -328,10 +414,18 @@ export const VoiceToSignCommunication: React.FC = () => {
               <div className="text-center text-slate-400 space-y-2">
                 <Layers className="w-10 h-10 mx-auto text-slate-500 opacity-60" />
                 <p className="text-sm font-bold">No verified signs available for this sentence</p>
-                <p className="text-xs text-slate-500">Try speaking or typing words like "Water", "Food", "Help", "Stop", "Thank you".</p>
+                <p className="text-xs text-slate-500">Try speaking or typing phrases like "Hello", "How are you?", "I need water", "I need a doctor", "Thank you".</p>
               </div>
             )}
           </div>
+
+          {/* Sentence Always Visible Alongside Sign Display */}
+          {inputText.trim() && (
+            <div className="px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 text-xs text-slate-100 flex items-center justify-between gap-2">
+              <span className="font-semibold text-slate-300 shrink-0">Message:</span>
+              <span className="font-bold truncate">{inputText}</span>
+            </div>
+          )}
 
           {/* Playback Controls Strip */}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
