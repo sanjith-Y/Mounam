@@ -129,3 +129,19 @@ Secondary Tagline: *"You Sign. I Speak. We Understand."*
 - **Validation & Test Execution**: Verified Python compilation and executed async endpoint test suite verifying Pydantic schema validation, status reporting, and proper handling of missing credentials without returning fake AI output.
 - **Phase 11 — Communication Intelligence & Personalization**: Implemented `personalizationService.ts`, `personalVocabularyService.ts`, `SmartQuickCommunication.tsx`, `PersonalVocabularyPanel.tsx`, `PersonalizationPrivacyPanel.tsx`. Wired `recordUsage()` into Dashboard, Communication, and EmergencyMode speak handlers. Added Smart Quick Access, My Vocabulary, and Privacy & Personalization sidebar tabs. Build: `npm run build` → 0 TS errors ✅.
 - **Phase 12 — Deployment Readiness**: Updated `vite.config.ts` with `manualChunks` → main bundle 646 kB → 298 kB. Created `DEPLOYMENT_GUIDE.md` and `TESTING_PLAN.md`. Final build: 5 chunks, 0 errors ✅.
+
+- [x] **Phase 16: Real-Time Hand Sign Recognition (A–Z)**
+  - **Files Created**:
+    - `frontend/src/config/islAlphabetConfig.ts` (A–Z ISL two-handed fingerspelling config: 1-hand vs 2-hand, static vs movement `H/J/Y`, visual similarity groups, chart descriptions)
+    - `frontend/src/services/alphabetDatasetService.ts` (consented local-only 157-dim landmark dataset collector with session/signer/condition tags, retake, delete, JSON export/import)
+    - `frontend/src/services/alphabetModelService.ts` (2-layer MLP `157 → 64 ReLU → N Softmax` trained with Adam + L2 regularization, z-score standardization fit on train split, session-grouped train/test split, held-out accuracy/precision/recall/confusion matrix, unknown & insufficient-hands rejection)
+    - `frontend/src/services/alphabetStabilityFilter.ts` (multi-frame stability voting, cooldown, duplicate-letter release, no-hand reset)
+    - `frontend/src/components/AlphabetSignRecognition.tsx` (Live Camera + 21-landmark overlay, Front/Rear camera switch, Word & Sentence Builder, VoiceEngine TTS in 6 languages, Dataset Collection A–Z, Training & Evaluation Dashboard)
+  - **Files Modified**:
+    - `frontend/src/services/landmarkNormalizationService.ts` (added `toEnrichedHandVector` & `extractDualHandAlphabetFeatures` for 157-dim dual-hand + inter-hand geometric features)
+    - `frontend/src/pages/Dashboard.tsx` (wired `alphabet_sign` tab)
+  - **Model & Dataset Status**: Model starts **Untrained (0 samples)** until the user collects or imports consented landmark samples; no fake predictions or hardcoded guesses are used.
+  - **Verification**:
+    - `npm run build` (`tsc && vite build`): 0 TypeScript errors ✅.
+    - Automated Node/esbuild pipeline test on synthetic 1-hand & 2-hand landmark fixtures (4 classes × 3 sessions × 5 samples = 60 samples, session-grouped 40 train / 20 test): `overallAccuracy = 1.0`, stability filter confirmed `C` after 6 frames, incomplete landmarks rejected ✅.
+    - Live human webcam signing across all 26 A–Z classes: **NOT TESTED** (requires user-collected multi-session landmark samples via the Dataset Collection tab).

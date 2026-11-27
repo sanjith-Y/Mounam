@@ -158,6 +158,126 @@ export class LandmarkNormalizationService {
     }
     return flat;
   }
+
+  /**
+   * Extract a single-hand enriched feature vector (72 floats):
+   * 63 normalized landmarks + 5 finger extensions + 4 finger spreads.
+   */
+  public toEnrichedHandVector(features: HandFrameFeatures): number[] {
+    return [
+      ...this.toFlatVector(features),
+      ...features.fingerExtensions,
+      ...features.fingerSpreads,
+    ];
+  }
+
+  /**
+   * Extract a fixed 157-dimensional feature vector for 1-hand and 2-hand ISL A–Z signs:
+   * - [0..71]: Primary hand (Right if present, else first hand) enriched 72 floats
+   * - [72..143]: Secondary hand enriched 72 floats (zeros if only 1 hand detected)
+   * - [144..155]: 12 inter-hand relational geometric features (normalized by avg palm size)
+   * - [156]: handCount indicator (0.5 for 1 hand, 1.0 for 2 hands)
+   *
+   * Returns null if no valid hand landmarks are detected.
+   */
+  public extractDualHandAlphabetFeatures(
+    handsLandmarks: RawLandmark[][],
+    handednesses: Array<'Left' | 'Right' | 'Unknown'> = []
+  ): {
+    featureVector: number[];
+    handCount: 1 | 2;
+    detectedHands: Array<'Left' | 'Right' | 'Unknown'>;
+    primaryFeatures: HandFrameFeatures;
+    secondaryFeatures: HandFrameFeatures | null;
+  } | null {
+    if (!handsLandmarks || handsLandmarks.length === 0) return null;
+
+    const validHands: Array<{
+      raw: RawLandmark[];
+      features: HandFrameFeatures;
+      handedness: 'Left' | 'Right' | 'Unknown';
+    }> = [];
+
+    for (let i = 0; i < Math.min(2, handsLandmarks.length); i++) {
+      const handedness = handednesses[i] || 'Unknown';
+      const processed = this.processHandLandmarks(handsLandmarks[i], handedness);
+      if (processed && processed.isValid) {
+        validHands.push({ raw: handsLandmarks[i], features: processed, handedness });
+      }
+    }
+
+    if (validHands.length === 0) return null;
+
+    // Canonical ordering: Right hand first if both present, else Left/first
+    validHands.sort((a, b) => {
+      if (a.handedness === b.handedness) return 0;
+      if (a.handedness === 'Right') return -1;
+      if (b.handedness === 'Right') return 1;
+      return 0;
+    });
+
+    const primary = validHands[0];
+    const secondary = validHands.length > 1 ? validHands[1] : null;
+
+    const primaryVec = this.toEnrichedHandVector(primary.features);
+    const secondaryVec = secondary
+      ? this.toEnrichedHandVector(secondary.features)
+      : new Array<number>(72).fill(0);
+
+    // 12 inter-hand relational features (normalized by mean palm scale)
+    let interHandVec = new Array<number>(12).fill(0);
+    if (secondary) {
+      const avgScale =
+        (primary.features.scaleFactor + secondary.features.scaleFactor) / 2 || 0.15;
+      const pRaw = primary.raw;
+      const sRaw = secondary.raw;
+
+      const wristDx = (sRaw[0].x - pRaw[0].x) / avgScale;
+      const wristDy = (sRaw[0].y - pRaw[0].y) / avgScale;
+      const wristDz = (sRaw[0].z - pRaw[0].z) / avgScale;
+      const wristDist = Math.hypot(wristDx, wristDy, wristDz);
+
+      const distNorm = (idxA: number, idxB: number) =>
+        Math.hypot(sRaw[idxB].x - pRaw[idxA].x, sRaw[idxB].y - pRaw[idxA].y, sRaw[idxB].z - pRaw[idxA].z) /
+        avgScale;
+
+      const palmDot =
+        primary.features.palmNormal.x * secondary.features.palmNormal.x +
+        primary.features.palmNormal.y * secondary.features.palmNormal.y +
+        primary.features.palmNormal.z * secondary.features.palmNormal.z;
+
+      interHandVec = [
+        wristDx,
+        wristDy,
+        wristDz,
+        wristDist,
+        distNorm(4, 4),   // Thumb-to-thumb distance
+        distNorm(8, 8),   // Index-to-index distance
+        distNorm(12, 12), // Middle-to-middle distance
+        distNorm(20, 20), // Pinky-to-pinky distance
+        distNorm(8, 0),   // Primary index to secondary wrist
+        distNorm(0, 8),   // Primary wrist to secondary index
+        distNorm(9, 9),   // Palm-center to palm-center distance
+        palmDot,          // Palm orientation alignment (-1 to 1)
+      ];
+    }
+
+    const handCount: 1 | 2 = secondary ? 2 : 1;
+    const featureVector = [
+      ...primaryVec,
+      ...secondaryVec,
+      ...interHandVec,
+      handCount === 2 ? 1.0 : 0.5,
+    ];
+
+    return {
+      featureVector,
+      handCount,
+      detectedHands: validHands.map((h) => h.handedness),
+      primaryFeatures: primary.features,
+      secondaryFeatures: secondary ? secondary.features : null,
+    };
+  }
 }
 
 export const landmarkNormalizationService = LandmarkNormalizationService.getInstance();

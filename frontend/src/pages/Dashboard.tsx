@@ -52,6 +52,7 @@ import { PersonalVocabularyPanel } from '../components/PersonalVocabularyPanel';
 import { PersonalizationPrivacyPanel } from '../components/PersonalizationPrivacyPanel';
 import { PilotFeedbackPanel } from '../components/PilotFeedbackPanel';
 import { TwoWayCommunication } from '../components/TwoWayCommunication';
+import { AlphabetSignRecognition } from '../components/AlphabetSignRecognition';
 import { Communication } from './Communication';
 import { useAuth } from '../context/AuthContext';
 import { useAccessibility } from '../context/AccessibilityContext';
@@ -73,6 +74,7 @@ type TabView =
   | 'personalization'
   | 'feedback'
   | 'two_way_communication'
+  | 'alphabet_sign'
   | 'settings'
   | 'help';
 
@@ -436,6 +438,7 @@ export const Dashboard: React.FC = () => {
     { id: 'personalization', label: 'Privacy & Personalization', icon: <ShieldCheck className="w-5 h-5" /> },
     { id: 'feedback', label: 'Pilot Feedback', icon: <MessageSquarePlus className="w-5 h-5" /> },
     { id: 'two_way_communication', label: 'Two-Way Communication', icon: <Mic className="w-5 h-5" /> },
+    { id: 'alphabet_sign', label: 'A–Z Sign Recognition', icon: <Hand className="w-5 h-5" /> },
     { id: 'settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
     { id: 'help', label: 'Help & Support', icon: <HelpCircle className="w-5 h-5" /> },
   ];
@@ -962,6 +965,13 @@ export const Dashboard: React.FC = () => {
           {activeTab === 'two_way_communication' && (
             <div className="space-y-6">
               <TwoWayCommunication />
+            </div>
+          )}
+
+          {/* VIEW: A-Z HAND SIGN RECOGNITION */}
+          {activeTab === 'alphabet_sign' && (
+            <div className="space-y-6">
+              <AlphabetSignRecognition onOpenEmergency={() => setActiveTab('emergency')} />
             </div>
           )}
 
